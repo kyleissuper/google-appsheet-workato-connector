@@ -57,14 +57,12 @@
   triggers: {
     updated_row: {
       title: 'New/updated row',
-      config_fields: lambda do |_object_definitions|
-        [
-          {
-            name: 'table_name',
-            optional: false
-          }
-        ]
-      end,
+      config_fields: [
+        {
+          name: 'table_name',
+          optional: false
+        }
+      ],
       poll: lambda do |_connection, input, _closure, _eis, _eos|
         {
           events: post("tables/#{input['table_name']}/Action")
