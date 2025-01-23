@@ -20,7 +20,7 @@
         name: 'region',
         label: 'Region',
         control_type: 'subdomain',
-        url: 'appsheet.com',
+        url: '.appsheet.com',
         hint: 'www or eu',
         optional: false
       },
@@ -52,5 +52,42 @@
     # This will return an empty row due to the selector, but it's a valid response
     post("tables/#{connection['test_table']}/Action")
       .payload(Action: 'Find', Properties: { Selector: 'TOP(X, 1)' })
-  end
+  end,
+
+  triggers: {
+    updated_row: {
+      title: 'New/updated row',
+      config_fields: lambda do |_object_definitions|
+        [
+          {
+            name: 'table_name',
+            optional: false
+          }
+        ]
+      end,
+      poll: lambda do |_connection, input, _closure, _eis, _eos|
+        {
+          events: post("tables/#{input['table_name']}/Action")
+            .payload(Action: 'Find', Rows: [])
+        }
+      end,
+      dedup: lambda do |record|
+        record.except('_RowNumber').to_json
+      end,
+      output_fields: lambda do |_object_definitions, _connection, config_fields|
+        post("tables/#{config_fields['table_name']}/Action")
+          .payload(Action: 'Find', Rows: [])
+          .first
+          .keys
+          .map do |key|
+            { name: key }
+          end
+      end,
+      sample_output: lambda do |_connection, input|
+        post("tables/#{input['table_name']}/Action")
+          .payload(Action: 'Find', Rows: [])
+          .first
+      end
+    }
+  }
 }

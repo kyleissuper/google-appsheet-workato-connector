@@ -12,7 +12,6 @@ RSpec.describe 'connector', :vcr do
 
   describe 'test' do
     subject(:output) { connector.test(settings) }
-
-    pending 'add some examples'
+    it { expect(output).to eq([]) }
   end
 end
