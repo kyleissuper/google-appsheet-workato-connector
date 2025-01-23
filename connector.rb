@@ -51,7 +51,7 @@
   test: lambda do |connection|
     # This will return an empty row due to the selector, but it's a valid response
     post("tables/#{connection['test_table']}/Action")
-      .payload(Action: 'Find', Properties: { Selector: 'TOP(X, 1)' })
+      .payload(Action: 'Find', Properties: { Selector: 'TOP(fab80e82-bb94-47d3-8c5c-210f78045d1b, 1)' })
   end,
 
   triggers: {
