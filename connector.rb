@@ -54,6 +54,14 @@
       .payload(Action: 'Find', Properties: { Selector: 'TOP(fab80e82-bb94-47d3-8c5c-210f78045d1b, 1)' })
   end,
 
+  custom_action: true,
+
+  custom_action_help: {
+    learn_more_url: 'https://support.google.com/appsheet/answer/10105398?hl=en&ref_topic=10105767&sjid=1399694082258277950-NC',
+    learn_more_text: 'API Documentation',
+    body: '<p>Build your own Google AppSheet custom action</p>'
+  },
+
   triggers: {
     updated_row: {
       title: 'New/updated row',
@@ -85,6 +93,65 @@
         post("tables/#{input['table_name']}/Action")
           .payload(Action: 'Find', Rows: [])
           .first
+      end
+    }
+  },
+
+  actions: {
+    get_rows: {
+      title: 'Get rows',
+      config_fields: [
+        {
+          name: 'table_name',
+          optional: false
+        }
+      ],
+      input_fields: lambda do |_object_definitions, _connection, config_fields|
+        post("tables/#{config_fields['table_name']}/Action")
+          .payload(Action: 'Find', Rows: [])
+          .first
+          .keys
+          .map do |key|
+            { name: key }
+          end
+      end,
+      execute: lambda do |_connection, input|
+        filters = input
+                  .except('table_name')
+                  .select { |_key, value| value.present? }
+                  .map do |key, value|
+                    "([#{key}] = \"#{value}\")"
+                  end
+        filters_string = if filters.length > 1
+                           "AND(#{filters.join(', ')})"
+                         elsif filters.length == 1
+                           filters.first
+                         end
+        {
+          Rows: post("tables/#{input['table_name']}/Action")
+            .payload(
+              Action: 'Find',
+              Rows: [],
+              Properties: {
+                Selector: filters_string ? "FILTER(#{input['table_name']}, #{filters_string})" : ''
+              }
+            )
+        }
+      end,
+      output_fields: lambda do |_object_definitions, _connection, config_fields|
+        [
+          {
+            name: 'Rows',
+            type: 'array',
+            properties: post("tables/#{config_fields['table_name']}/Action")
+              .payload(Action: 'Find', Rows: [])
+              .first
+              .keys
+              .map do |key|
+                { name: key }
+              end
+          }
+        ]
       end
     }
   }
