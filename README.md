@@ -17,6 +17,7 @@ test_table: YOUR-TEST-TABLE
 3. Workato will save this with an encryption key at `master.key`
 
 To set up AppSheet for specs: have one table with at least 3 columns, all simple types
+
 To run specs: `bundle exec rspec spec/`
 
 To run a specific component manually: `workato exec [params]`, see [docs](https://docs.workato.com/developing-connectors/sdk/cli/reference/cli-commands.html#workato-exec)
