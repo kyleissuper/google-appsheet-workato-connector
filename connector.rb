@@ -153,6 +153,57 @@
           }
         ]
       end
+    },
+    add_rows: {
+      title: 'Add rows',
+      config_fields: [
+        {
+          name: 'table_name',
+          optional: false
+        }
+      ],
+      input_fields: lambda do |_object_definitions, _connection, config_fields|
+        [
+          {
+            name: 'Rows',
+            type: 'array',
+            properties: post("tables/#{config_fields['table_name']}/Action")
+              .payload(Action: 'Find', Rows: [])
+              .first
+              .keys
+              .map do |key|
+                { name: key }
+              end
+          }
+        ]
+      end,
+      execute: lambda do |_connection, input|
+        post("tables/#{input['table_name']}/Action")
+          .payload(Action: 'Add', Rows: input['Rows'])
+          .after_error_response(/.*/) do |_code, body, _header, message|
+            parsed_body = parse_json(body)
+            if parsed_body['detail'].present?
+              error("#{parsed_body['type']}: #{parsed_body['detail']}")
+            else
+              error("#{message}:#{body}")
+            end
+          end
+      end,
+      output_fields: lambda do |_object_definitions, _connection, config_fields|
+        [
+          {
+            name: 'Rows',
+            type: 'array',
+            properties: post("tables/#{config_fields['table_name']}/Action")
+              .payload(Action: 'Find', Rows: [])
+              .first
+              .keys
+              .map do |key|
+                { name: key }
+              end
+          }
+        ]
+      end
     }
   }
 }
