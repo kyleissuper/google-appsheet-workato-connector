@@ -204,6 +204,61 @@
           }
         ]
       end
+    },
+    update_rows: {
+      title: 'Update rows',
+      config_fields: [
+        {
+          name: 'table_name',
+          optional: false
+        }
+      ],
+      input_fields: lambda do |_object_definitions, _connection, config_fields|
+        [
+          {
+            name: 'Rows',
+            type: 'array',
+            properties: post("tables/#{config_fields['table_name']}/Action")
+              .payload(Action: 'Find', Rows: [])
+              .first
+              .keys
+              .map do |key|
+                if key == 'Row ID'
+                  { name: key, optional: false }
+                else
+                  { name: key }
+                end
+              end
+          }
+        ]
+      end,
+      execute: lambda do |_connection, input|
+        post("tables/#{input['table_name']}/Action")
+          .payload(Action: 'Edit', Rows: input['Rows'].map(&:compact))
+          .after_error_response(/.*/) do |_code, body, _header, message|
+            parsed_body = parse_json(body)
+            if parsed_body['detail'].present?
+              error("#{parsed_body['type']}: #{parsed_body['detail']}")
+            else
+              error("#{message}:#{body}")
+            end
+          end
+      end,
+      output_fields: lambda do |_object_definitions, _connection, config_fields|
+        [
+          {
+            name: 'Rows',
+            type: 'array',
+            properties: post("tables/#{config_fields['table_name']}/Action")
+              .payload(Action: 'Find', Rows: [])
+              .first
+              .keys
+              .map do |key|
+                { name: key }
+              end
+          }
+        ]
+      end
     }
   }
 }
