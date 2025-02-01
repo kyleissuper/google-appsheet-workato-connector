@@ -23,3 +23,7 @@ To run specs: `bundle exec rspec spec/`
 To run a specific component manually: `workato exec [params]`, see [docs](https://docs.workato.com/developing-connectors/sdk/cli/reference/cli-commands.html#workato-exec)
 
 To push to Workato: `workato push --api-token $API_TOKEN`
+
+## Development Notes
+* The specs are not implemented for delete/update row actions for now because they are destructive, and it's not easy to get a reliable AppSheet test instance.
+* While these actions do technically wrap around the AppSheet API, their interfaces could be friendlier (e.g. updating/deleting by a specific column that is unique but not the Row ID)
