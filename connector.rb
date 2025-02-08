@@ -107,13 +107,7 @@
         }
       ],
       input_fields: lambda do |_object_definitions, _connection, config_fields|
-        post("tables/#{config_fields['table_name']}/Action")
-          .payload(Action: 'Find', Rows: [])
-          .first
-          .keys
-          .map do |key|
-            { name: key }
-          end
+        call(:get_columns_using_table_name, config_fields['table_name'])
       end,
       execute: lambda do |_connection, input|
         filters = input
@@ -143,13 +137,7 @@
           {
             name: 'Rows',
             type: 'array',
-            properties: post("tables/#{config_fields['table_name']}/Action")
-              .payload(Action: 'Find', Rows: [])
-              .first
-              .keys
-              .map do |key|
-                { name: key }
-              end
+            properties: call(:get_columns_using_table_name, config_fields['table_name'])
           }
         ]
       end
@@ -167,13 +155,7 @@
           {
             name: 'Rows',
             type: 'array',
-            properties: post("tables/#{config_fields['table_name']}/Action")
-              .payload(Action: 'Find', Rows: [])
-              .first
-              .keys
-              .map do |key|
-                { name: key }
-              end
+            properties: call(:get_columns_using_table_name, config_fields['table_name'])
           }
         ]
       end,
@@ -194,13 +176,7 @@
           {
             name: 'Rows',
             type: 'array',
-            properties: post("tables/#{config_fields['table_name']}/Action")
-              .payload(Action: 'Find', Rows: [])
-              .first
-              .keys
-              .map do |key|
-                { name: key }
-              end
+            properties: call(:get_columns_using_table_name, config_fields['table_name'])
           }
         ]
       end
@@ -218,16 +194,10 @@
           {
             name: 'Rows',
             type: 'array',
-            properties: post("tables/#{config_fields['table_name']}/Action")
-              .payload(Action: 'Find', Rows: [])
-              .first
-              .keys
-              .map do |key|
-                if key == 'Row ID'
-                  { name: key, optional: false }
-                else
-                  { name: key }
-                end
+            properties: call(:get_columns_using_table_name, config_fields['table_name'])
+              .map do |column|
+                column['optional'] = false if column['name'] == 'Row ID'
+                column
               end
           }
         ]
@@ -249,13 +219,7 @@
           {
             name: 'Rows',
             type: 'array',
-            properties: post("tables/#{config_fields['table_name']}/Action")
-              .payload(Action: 'Find', Rows: [])
-              .first
-              .keys
-              .map do |key|
-                { name: key }
-              end
+            properties: call(:get_columns_using_table_name, config_fields['table_name'])
           }
         ]
       end
@@ -296,16 +260,28 @@
           {
             name: 'Rows',
             type: 'array',
-            properties: post("tables/#{config_fields['table_name']}/Action")
-              .payload(Action: 'Find', Rows: [])
-              .first
-              .keys
-              .map do |key|
-                { name: key }
-              end
+            properties: call(:get_columns_using_table_name, config_fields['table_name'])
           }
         ]
       end
     }
+  },
+
+  methods: {
+    get_columns_using_table_name: lambda do |table_name|
+      first_row = post("tables/#{table_name}/Action")
+                  .payload(Action: 'Find', Rows: [])
+                  .first
+
+      if first_row.nil?
+        raise 'Please add at least one example row to the table so we can determine the available columns'
+      end
+
+      first_row
+        .keys
+        .map do |key|
+          { name: key }
+        end
+    end
   }
 }
