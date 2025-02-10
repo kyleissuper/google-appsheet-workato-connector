@@ -81,18 +81,33 @@
         record.except('_RowNumber').to_json
       end,
       output_fields: lambda do |_object_definitions, _connection, config_fields|
-        post("tables/#{config_fields['table_name']}/Action")
-          .payload(Action: 'Find', Rows: [])
-          .first
-          .keys
-          .map do |key|
-            { name: key }
-          end
+        call(:get_columns_using_table_name, config_fields['table_name'])
       end,
       sample_output: lambda do |_connection, input|
         post("tables/#{input['table_name']}/Action")
           .payload(Action: 'Find', Rows: [])
           .first
+      end
+    },
+    new_row: {
+      title: 'New row',
+      config_fields: [
+        {
+          name: 'table_name',
+          optional: false
+        }
+      ],
+      poll: lambda do |_connection, input, _closure, _eis, _eos|
+        {
+          events: post("tables/#{input['table_name']}/Action")
+            .payload(Action: 'Find', Rows: [])
+        }
+      end,
+      dedup: lambda do |record|
+        record['Row ID']
+      end,
+      output_fields: lambda do |_object_definitions, _connection, config_fields|
+        call(:get_columns_using_table_name, config_fields['table_name'])
       end
     }
   },
